@@ -1,7 +1,8 @@
 import bs4
 
 type_mapping = {
-"str": "string"
+    "str": "string",
+    "bool": "boolean"
 }
 
 def to_camel_case(snake_string):

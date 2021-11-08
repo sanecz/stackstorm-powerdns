@@ -22,6 +22,6 @@
       description: Resource records sets
       required: False
     update:
-      type: bool
+      type: boolean
       description: If the zone need to be updated or created
       required: False

@@ -18,6 +18,6 @@
       description: Json file name
       required: False
     pretty_json:
-      type: bool
+      type: boolean
       description: Enable pretty json display
       required: False
