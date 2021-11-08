@@ -9,3 +9,7 @@
       description: "Server name to query."
       required: true
       default: localhost
+    r_name:
+      type: string
+      description: Record canonical name
+      required: True

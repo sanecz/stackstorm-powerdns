@@ -9,3 +9,7 @@
       description: "Server name to query."
       required: true
       default: localhost
+    name:
+      type: string
+      description: Zone name (canonical)
+      required: True

@@ -13,6 +13,10 @@
       type: string
       description: "Zone's canonical name to get details."
       required: true
+    directory:
+      type: string
+      description: Directory to store json file
+      required: True
     filename:
       type: string
       description: Json file name

@@ -1,0 +1,196 @@
+version: 1.0
+description: "Run all actions from PowerDNS pack for functional testing."
+
+vars:
+  - test_domain: functionaltest.local.
+  - test_record1: www.<% ctx("test_domain") %>
+  - test_record2: mail.<% ctx("test_domain") %>
+
+tasks:
+  get_servers:
+    action: powerdns.get_servers
+    next:
+      - do:
+        - get_config
+
+  get_config:
+    action: powerdns.get_config
+    next:
+      - do:
+        - create_zone
+
+  create_zone:
+    action: powerdns.create_zone
+    input:
+      server_id: localhost
+      name: <% ctx("test_domain") %>
+      kind: master
+      nameservers:
+        - ns1.<% ctx("test_domain") %>
+        - ns2.<% ctx("test_domain") %>
+    next:
+      - do:
+        - notify
+
+  notify:
+    action: powerdns.notify
+    input:
+      zone_name: <% ctx("test_domain") %>
+    next:
+      - do:
+        - get_zone
+
+  get_zone:
+    action: powerdns.get_zone
+    input:
+      name: <% ctx("test_domain") %>
+    next:
+      - do:
+        - get_zones
+
+  get_zones:
+    action: powerdns.get_zones
+    next:
+      - do:
+        - get_details
+
+  get_details:
+    action: powerdns.get_details
+    input:
+      zone_name: <% ctx("test_domain") %>
+    next:
+      - do:
+        - suggest_zone
+
+  suggest_zone:
+    action: powerdns.suggest_zone
+    input:
+      r_name: a.b.<% ctx("test_domain") %>
+    next:
+      - do:
+        - create_records
+
+  create_records:
+    action: powerdns.create_records
+    input:
+      record_changetype: "REPLACE"
+      record_name: <% ctx("test_record1") %>
+      record_ttl: 3600
+      record_rtype: A
+      record_records:
+        - 127.0.0.4
+        - 127.0.0.10
+      zone_name: <% ctx("test_domain") %>
+    next:
+      - do:
+        - create_another_records
+
+  create_another_records:
+    action: powerdns.create_records
+    input:
+      record_changetype: "REPLACE"
+      record_name: <% ctx("test_record2") %>
+      record_ttl: 3600
+      record_rtype: A
+      record_records:
+        - 127.0.0.5
+        - 127.0.0.11
+      zone_name: <% ctx("test_domain") %>
+    next:
+      - do:
+        - get_records
+
+  get_records:
+    action: powerdns.get_records
+    input:
+      zone_name: <% ctx("test_domain") %>
+    next:
+    - do:
+      - get_record
+
+  get_record:
+    action: powerdns.get_record
+    input:
+      name: <% ctx("test_record1") %>
+      zone_name: <% ctx("test_domain") %>
+    next:
+      - do:
+        - update_records
+
+  update_records:
+    action: powerdns.create_records
+    input:
+      record_changetype: "REPLACE"
+      record_name: <% ctx("test_record1") %>
+      record_ttl: 7200
+      record_rtype: A
+      record_records:
+        - 127.0.0.44
+        - 127.0.0.104
+      zone_name: <% ctx("test_domain") %>
+    next:
+      - do:
+        - get_record_2
+
+  get_record_2:
+    action: powerdns.get_record
+    input:
+      name: <% ctx("test_record2") %>
+      zone_name: <% ctx("test_domain") %>
+    next:
+      - do:
+        - backup
+
+  backup:
+    action: powerdns.backup
+    input:
+      directory: /tmp
+      filename: backup_pdns.json
+      zone_name: <% ctx("test_domain") %>
+    next:
+      - do:
+        - restore_zone
+
+  restore_zone:
+    action: powerdns.restore_zone
+    input:
+      json_file: /tmp/backup_pdns.json
+    next:
+     - do:
+       - delete_records
+
+  delete_records:
+    action: powerdns.delete_records
+    input:
+      record_name: <% ctx("test_record2") %>
+      record_records:
+        - 127.0.0.5
+      record_rtype: A
+      zone_name: <% ctx("test_domain") %>
+    next:
+      - do:
+        - get_records2
+
+  get_records2:
+    action: powerdns.get_records
+    input:
+      zone_name: <% ctx("test_domain") %>
+    next:
+      - do:
+        - search
+
+  search:
+    action: powerdns.search
+    input:
+      search_term: "*functionaltest*"
+      max_result: 5
+    next:
+      - do:
+        - delete_zone
+
+  delete_zone:
+    action: powerdns.delete_zone
+    input:
+      name: <% ctx("test_domain") %>
+      server_id: localhost
+

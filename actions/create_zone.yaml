@@ -9,16 +9,28 @@
       description: "Server name to query."
       required: true
       default: localhost
+    name:
+      type: string
+      description: Name of zone
+      required: True
+    kind:
+      type: string
+      description: Type of zone
+      required: True
+    nameservers:
+      type: array
+      description: Name servers
+      required: True
     masters:
-      type: list
+      type: array
       description: Zone masters
       required: False
     servers:
-      type: list
+      type: array
       description: List of forwarded-to servers (recursor only)
       required: False
     rrsets:
-      type: list
+      type: array
       description: Resource records sets
       required: False
     update:

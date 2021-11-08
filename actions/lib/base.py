@@ -1,7 +1,7 @@
 # coding=utf-8
 from st2common import log as logging
 from st2common.runners.base_action import Action
-from powerdns.exception import PDNSCanonicalError, PDNSError
+from powerdns.exceptions import PDNSCanonicalError, PDNSError
 
 import powerdns
 
@@ -39,8 +39,9 @@ class PowerDNSClient(Action):
         for server in self._api.servers:
             if str(server) == server_id:
                 self.api = server
+                return
         else:
-            raise PowerDNSClientError("Server not found")
+            raise PowerDNSClientError("Server not found: {} / {}".format(server_id, str(self._api.servers[0])))
 
     def _select_zone(self, zone_name):
         self.api = self.api.get_zone(zone_name)
@@ -51,8 +52,19 @@ class PowerDNSClient(Action):
         try:
             self._select_server_id(server_id)
             # remove server_id from args
-            args = list(args)
-            args.pop(args.index(server_id))
+            try:
+                args = list(args)
+                args.pop(args.index(server_id))
+            except ValueError:
+                pass
+            rrset = {}
+            cpy = kwargs.copy()
+            for arg, value in cpy.items():
+                if arg.startswith("record_"):
+                    rrset[arg.split("_")[1]] = value
+                    kwargs.pop(arg)
+            if rrset:
+                kwargs["rrsets"] = [powerdns.interface.RRSet(**rrset)]
             if "zone_name" in kwargs:
                 self._select_zone(kwargs.pop("zone_name"))
             return (True, self._run(*args, **kwargs))

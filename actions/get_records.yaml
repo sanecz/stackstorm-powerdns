@@ -2,10 +2,14 @@
   name: get_records
   runner_type: "python-script"
   description: "Get zone’s records"
-  entry_point: "records.py"
+  entry_point: "get_records.py"
   parameters:
     server_id:
       type: string
       description: "Server name to query."
       required: true
       default: localhost
+    zone_name:
+      type: string
+      description: Zone's canonical name to get details.
+      required: True

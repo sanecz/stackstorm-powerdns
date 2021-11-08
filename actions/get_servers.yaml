@@ -2,7 +2,7 @@
   name: get_servers
   runner_type: "python-script"
   description: "List PowerDNS servers"
-  entry_point: "servers.py"
+  entry_point: "get_servers.py"
   parameters:
     server_id:
       type: string

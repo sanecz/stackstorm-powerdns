@@ -13,3 +13,27 @@
       type: string
       description: "Zone's canonical name to get details."
       required: true
+    record_changetype:
+      type: string
+      description: API keyword DELETE or REPLACE
+      required: False
+    record_name:
+      type: string
+      description: Record name
+      required: True
+    record_rtype:
+      type: string
+      description: Record type
+      required: True
+    record_records:
+      type: array
+      description: List of Str or Tuple(content_str, disabled_bool) or Dict with the keys “content” and optionally “disabled”.
+      required: True
+    record_ttl:
+      type: number
+      description: Record time to live
+      required: False
+    record_comments:
+      type: array
+      description: list of Comments instances for this RRSet
+      required: False

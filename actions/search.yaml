@@ -9,7 +9,11 @@
       description: "Server name to query."
       required: true
       default: localhost
+    search_term:
+      type: string
+      description: search_term
+      required: True
     max_result:
-      type: int
-      description: 
+      type: number
+      description: max_result
       required: False

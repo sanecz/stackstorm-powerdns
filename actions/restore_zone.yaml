@@ -9,3 +9,7 @@
       description: "Server name to query."
       required: true
       default: localhost
+    json_file:
+      type: string
+      description: Backup file
+      required: True
