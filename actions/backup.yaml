@@ -13,10 +13,6 @@
       type: string
       description: "Zone's canonical name to get details."
       required: true
-    zone_name:
-      type: string
-      description: Zone's canonical name to get details.
-      required: True
     filename:
       type: str
       description: Json file name
