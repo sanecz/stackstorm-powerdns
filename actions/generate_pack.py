@@ -115,6 +115,8 @@ class {property_cls}(PowerDNSClient):
       required: true
 """
         for name, param in parameters.items():
+            if name == "server_id":
+                continue
             yaml_content += f"""    {name}:
       type: {param['type']}
       description: {param['description']}

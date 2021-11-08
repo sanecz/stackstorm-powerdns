@@ -9,7 +9,3 @@
       description: "Server name to query."
       required: true
       default: localhost
-    server_id:
-      type: string
-      description: Server name to query.
-      required: True
