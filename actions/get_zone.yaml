@@ -1,0 +1,15 @@
+---
+  name: get_zone
+  runner_type: "python-script"
+  description: "Get zone by name"
+  entry_point: "get_zone.py"
+  parameters:
+    server_id:
+      type: string
+      description: "Server name to query."
+      required: true
+      default: localhost
+    server_id:
+      type: string
+      description: Server name to query.
+      required: True

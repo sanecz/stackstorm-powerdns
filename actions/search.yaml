@@ -1,0 +1,19 @@
+---
+  name: search
+  runner_type: "python-script"
+  description: "Search term using API search endpoint"
+  entry_point: "search.py"
+  parameters:
+    server_id:
+      type: string
+      description: "Server name to query."
+      required: true
+      default: localhost
+    server_id:
+      type: string
+      description: Server name to query.
+      required: True
+    max_result:
+      type: int
+      description: 
+      required: False

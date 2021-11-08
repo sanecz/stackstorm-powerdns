@@ -1,0 +1,23 @@
+---
+  name: delete_records
+  runner_type: "python-script"
+  description: "Delete resource record sets"
+  entry_point: "delete_records.py"
+  parameters:
+    server_id:
+      type: string
+      description: "Server name to query."
+      required: true
+      default: localhost
+    zone_name:
+      type: string
+      description: "Zone's canonical name to get details."
+      required: true
+    server_id:
+      type: string
+      description: Server name to query.
+      required: True
+    zone_name:
+      type: string
+      description: Zone's canonical name to get details.
+      required: True

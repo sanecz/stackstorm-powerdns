@@ -1,0 +1,15 @@
+---
+  name: suggest_zone
+  runner_type: "python-script"
+  description: "Suggest best matching zone from existing zone"
+  entry_point: "suggest_zone.py"
+  parameters:
+    server_id:
+      type: string
+      description: "Server name to query."
+      required: true
+      default: localhost
+    server_id:
+      type: string
+      description: Server name to query.
+      required: True

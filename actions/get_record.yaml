@@ -1,0 +1,23 @@
+---
+  name: get_record
+  runner_type: "python-script"
+  description: "Get record data"
+  entry_point: "get_record.py"
+  parameters:
+    server_id:
+      type: string
+      description: "Server name to query."
+      required: true
+      default: localhost
+    zone_name:
+      type: string
+      description: "Zone's canonical name to get details."
+      required: true
+    server_id:
+      type: string
+      description: Server name to query.
+      required: True
+    zone_name:
+      type: string
+      description: Zone's canonical name to get details.
+      required: True

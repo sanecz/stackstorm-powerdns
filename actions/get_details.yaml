@@ -1,0 +1,11 @@
+---
+  name: get_details
+  runner_type: "python-script"
+  description: "Get zone’s detailed data"
+  entry_point: "details.py"
+  parameters:
+    server_id:
+      type: string
+      description: "Server name to query."
+      required: true
+      default: localhost

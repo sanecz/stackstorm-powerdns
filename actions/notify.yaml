@@ -1,0 +1,23 @@
+---
+  name: notify
+  runner_type: "python-script"
+  description: "Trigger notification for zone updates"
+  entry_point: "notify.py"
+  parameters:
+    server_id:
+      type: string
+      description: "Server name to query."
+      required: true
+      default: localhost
+    zone_name:
+      type: string
+      description: "Zone's canonical name to get details."
+      required: true
+    server_id:
+      type: string
+      description: Server name to query.
+      required: True
+    zone_name:
+      type: string
+      description: Zone's canonical name to get details.
+      required: True

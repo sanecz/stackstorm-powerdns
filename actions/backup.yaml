@@ -1,0 +1,31 @@
+---
+  name: backup
+  runner_type: "python-script"
+  description: "Backup zone data to json file"
+  entry_point: "backup.py"
+  parameters:
+    server_id:
+      type: string
+      description: "Server name to query."
+      required: true
+      default: localhost
+    zone_name:
+      type: string
+      description: "Zone's canonical name to get details."
+      required: true
+    server_id:
+      type: string
+      description: Server name to query.
+      required: True
+    zone_name:
+      type: string
+      description: Zone's canonical name to get details.
+      required: True
+    filename:
+      type: str
+      description: Json file name
+      required: False
+    pretty_json:
+      type: bool
+      description: Enable pretty json display
+      required: False

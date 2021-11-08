@@ -1,0 +1,31 @@
+---
+  name: create_zone
+  runner_type: "python-script"
+  description: "Create or update a (new) zone"
+  entry_point: "create_zone.py"
+  parameters:
+    server_id:
+      type: string
+      description: "Server name to query."
+      required: true
+      default: localhost
+    server_id:
+      type: string
+      description: Server name to query.
+      required: True
+    masters:
+      type: list
+      description: Zone masters
+      required: False
+    servers:
+      type: list
+      description: List of forwarded-to servers (recursor only)
+      required: False
+    rrsets:
+      type: list
+      description: Resource records sets
+      required: False
+    update:
+      type: bool
+      description: If the zone need to be updated or created
+      required: False
