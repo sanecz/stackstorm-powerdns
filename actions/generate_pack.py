@@ -1,5 +1,9 @@
 import bs4
 
+type_mapping = {
+"str": "string"
+}
+
 def to_camel_case(snake_string):
     return snake_string.title().replace("_", "")
 
@@ -118,7 +122,7 @@ class {property_cls}(PowerDNSClient):
             if name == "server_id" or name == "zone_name":
                 continue
             yaml_content += f"""    {name}:
-      type: {param['type']}
+      type: {type_mapping.get(param['type'], param['type'])}
       description: {param['description']}
       required: {param['required']}
 """

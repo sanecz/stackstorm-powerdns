@@ -14,7 +14,7 @@
       description: "Zone's canonical name to get details."
       required: true
     filename:
-      type: str
+      type: string
       description: Json file name
       required: False
     pretty_json:
