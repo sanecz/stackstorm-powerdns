@@ -112,7 +112,7 @@ class {property_cls}(PowerDNSClient):
             method_params = method.find("dl", {"class": "field-list simple"}).find_all("li") \
                 or method.find("dd", {"class": "field-odd"}).find_all("p")
         except AttributeError:   # there is no args at all
-            methods_params = []
+            method_params = []
         parameters = {
             "server_id": {
                 "type": "string",

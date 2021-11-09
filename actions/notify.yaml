@@ -13,7 +13,3 @@
       type: string
       description: "Zone's canonical name to get details."
       required: true
-    name:
-      type: string
-      description: Record name
-      required: True

@@ -139,25 +139,7 @@ tasks:
       zone_name: <% ctx("test_domain") %>
     next:
       - do:
-        - backup
-
-  backup:
-    action: powerdns.backup
-    input:
-      directory: /tmp
-      filename: backup_pdns.json
-      zone_name: <% ctx("test_domain") %>
-    next:
-      - do:
-        - restore_zone
-
-  restore_zone:
-    action: powerdns.restore_zone
-    input:
-      json_file: /tmp/backup_pdns.json
-    next:
-     - do:
-       - delete_records
+        - delete_records
 
   delete_records:
     action: powerdns.delete_records
@@ -193,4 +175,3 @@ tasks:
     input:
       name: <% ctx("test_domain") %>
       server_id: localhost
-
