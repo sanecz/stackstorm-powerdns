@@ -1,5 +1,5 @@
 from lib.base import PowerDNSClient
 
-class GetZones(PowerDNSClient):
+class Zones(PowerDNSClient):
     def _run(self):
-      return self.api.zones
+        return self.api.zones

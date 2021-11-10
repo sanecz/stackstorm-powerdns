@@ -1,5 +1,5 @@
 from lib.base import PowerDNSClient
 
-class GetDetails(PowerDNSClient):
+class Details(PowerDNSClient):
     def _run(self):
-      return self.api.details
+        return self.api.details

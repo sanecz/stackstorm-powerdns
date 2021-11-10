@@ -1,5 +1,5 @@
 from lib.base import PowerDNSClient
 
-class GetRecords(PowerDNSClient):
+class Records(PowerDNSClient):
     def _run(self):
-      return self.api.records
+        return self.api.records

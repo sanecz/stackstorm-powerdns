@@ -1,193 +1,255 @@
-import bs4
+from abc import ABC
 
-type_mapping = {
+import bs4
+from ruamel.yaml import YAML, yaml_object
+from collections import ChainMap
+
+from typing import Optional
+
+yaml = YAML()
+yaml.explicit_start = True
+
+ALLOWED_CLASSES = [
+    "powerdns.interface.PDNSServer",
+    "powerdns.interface.PDNSZone",
+    "powerdns.interface.PDNSEndpoint"
+]
+
+TYPE_MAPPING_YAML = {
     "str": "string",
     "list": "array",
     "bool": "boolean",
     "int": "number"
 }
 
-def to_camel_case(snake_string):
-    return snake_string.title().replace("_", "")
 
-with open("/home/lisa/work/python-powerdns/docs/build/html/interface.html") as handle:
-    doc = handle.read()
+class Parameters:
+    name: str
+    type_: str
+    description: str
+    required: bool
+    default: Optional[str]
 
-parsed_doc = bs4.BeautifulSoup(doc, 'html.parser')
-klasses = parsed_doc.find_all("dl", {"class": "py class"})
+    def __init__(self, name, type_, description, required, default=None):
+        self.name = name
+        self.type_ = TYPE_MAPPING_YAML.get(type_, type_)
+        self.description = description
+        self.required = required
+        self.default = default
 
-allowed_klasses = ["powerdns.interface.PDNSServer", "powerdns.interface.PDNSZone", "powerdns.interface.PDNSEndpoint"]
+    def __repr__(self):
+        return f"<Parameters@{self.name}>"
 
-for klass in klasses:
-    klass_name = klass.find("dt", {"class": "sig sig-object py"}).get("id")
-    if klass_name == 'powerdns.interface.RRSet':
-        klass_params = klass.find("ul", {"class": "simple"}).find_all("li")
-        rrset_params = {}
-        klass_params_val = klass.find_all("em", {"class": "sig-param"})
-        for param in klass_params:
-            param_name = param.find("strong").text
-            param_type = param.find("em").text
-            param_desc = param.find("p") or params
-            param_desc = param.text.split("–")[-1].strip().replace("\n", " ")
-
-            param_required = True
-            for item in klass_params_val:
-                if item.find("span", {"class": "n"}).text == param_name:
-                    if item.find("span", {"class": "o"}):
-                        param_required = False
-
-            rrset_params[f"record_{param_name}"] = {
-                "type": param_type,
-                "description":  param_desc,
-                "required": param_required
-            }
-        break
+    @property
+    def parameters(self):
+        content = {
+            "type": self.type_,
+            "description": self.description,
+            "required": self.required,
+        }
+        if self.default:
+            content.update({"default": self.default})
+        return {self.name: content}
 
 
-for klass in klasses:
-    klass_name = klass.find("dt", {"class": "sig sig-object py"}).get("id")
+class Template:
+    name: str
+    description: str
+    script_name: str = ""
+    call: str = "api"
 
-    if not klass_name in allowed_klasses:
-        print(f"Skipping {klass_name}")
-        continue
+    def __init__(self, content, parent_name):
+        self.content = content
+        self.parameters = [self.add_server_id()]
 
-    print(klass_name)
-    
-    if klass_name == "powerdns.interface.PDNSEndpoint":
-        call = "_api"
-    else:
-        call = "api"    
+        if parent_name == "powerdns.interface.PDNSZone":
+            self.parameters.append(self.add_zone_name())
 
-    klass_params = klass.find("dl", {"class": "field-list simple"}).find_all("li") or []
-    for param in klass_params:
-        param_name = param.find("strong").text
-        param_type = param.find("em").text
-        param_desc = param.find("p") or params
-        param_desc = param.text.split("–")[-1].strip()
+        if parent_name == "powerdns.interface.PDNSEndpoint":
+            self.call = "_api"
 
-    klass_methods = klass.find_all("dl", {"class": "py method"}) or []
-    klass_properties = klass.find_all("dl", {"class": "py property"}) or []
+    @staticmethod
+    def add_zone_name():
+        return Parameters(
+            name="zone_name",
+            type_="string",
+            description="Zone's canonical name to get details.",
+            required=True
+        )
 
-    for properti in klass_properties:
-        property_name = properti.find("span", {"class": "sig-name descname"}).text
-        property_doc = properti.find("dd").find("p").text
-        with open(f"get_{property_name}.yaml", "w") as handle:
-            handle.write(f"""---
-  name: get_{property_name}
-  runner_type: "python-script"
-  description: "{property_doc}"
-  entry_point: "get_{property_name}.py"
-  parameters:
-    server_id:
-      type: string
-      description: "Server name to query."
-      required: true
-      default: localhost
-""")
+    @staticmethod
+    def add_server_id():
+        return Parameters(
+            name="server_id",
+            type_="string",
+            description="Server name to query.",
+            required=True,
+            default="localhost"
+        )
 
-            if klass_name == "powerdns.interface.PDNSZone":
-                handle.write(f"""    zone_name:
-      type: string
-      description: Zone's canonical name to get details.
-      required: True
-""")
-        property_cls = to_camel_case(f"get_{property_name}")
-        with open(f"get_{property_name}.py", "w") as handle:
-            handle.write(f"""from lib.base import PowerDNSClient
+    @property
+    def class_name(self):
+        return self.name.title().replace("_", "")
 
-class {property_cls}(PowerDNSClient):
-    def _run(self):
-      return self.{call}.{property_name}
-""")
+    def write_yaml(self):
+        content = {
+            "name": f"{self.script_name or self.name}",
+            "runner_type": "python-script",
+            "description": self.description,
+            "entry_point": f"{self.script_name or self.name}.py",
+            "parameters": dict(ChainMap(*map(lambda x: x.parameters, self.parameters)))
+        }
+        with open(f"{self.script_name or self.name}.py", "w") as fp:
+            yaml.dump(content, fp)
 
-    for method in klass_methods:
-        method_name = method.find("dt", {"class": "sig sig-object py"}).get("id").split(".")[-1]
-        method_doc = method.find("dd").find("p").text
-        # retrieive proto to know if arg is required or not
-        # remove the last two a href and their text to retrieive full proto of func
-        method_params_val = method.find_all("em", {"class": "sig-param"})
+    def to_py(self):
+        return f"""from lib.base import PowerDNSClient
+
+class {self.class_name}(PowerDNSClient):
+    def _run(self, *args, **kwargs):
+        return self.{self.call}.{self.name}(*args, **kwargs)
+"""
+
+    def write_py(self):
+        content = self.to_py()
+        with open(f"{self.script_name or self.name}.py", "w") as fp:
+            fp.write(content)
+
+    def parse(self):
+        raise NotImplementedError
+
+    def write(self):
+        self.parse()
+        self.write_yaml()
+        self.write_py()
+
+
+class Class(Template):
+    def _parse_params(self, parameters, params_default_values):
+        for parameter in parameters:
+            parameter_name = "rrset_" + parameter.find("strong").text
+            required = True
+            for item in params_default_values:
+                if item.find("span", {"class": "n"}).text == parameter_name \
+                        and item.find("span", {"class": "o"}):
+                    required = False
+            try:
+                description = parameter.find("p").text.split("–")[-1].strip().replace("\n", " ")
+            except AttributeError:
+                description = parameter_name
+
+            self.parameters.append(
+                Parameters(
+                    name=parameter_name,
+                    type_=parameter.find("em").text,
+                    description=description,
+                    required=required
+                )
+            )
+
+    def parse(self):
+        self.name = self.content.find("dt", {"class": "sig sig-object py"}).get("id")
+        parameters = self.content.find("ul", {"class": "simple"}).find_all("li")
+        params_default_values = self.content.find_all("em", {"class": "sig-param"})
+
+        self._parse_params(parameters, params_default_values)
+
+
+class Method(Template):
+    def __init__(self, content, parent_name, rrsets_params):
+        super().__init__(content, parent_name)
+        self.rrsets_params = rrsets_params
+
+    def _parse_params(self, parameters, params_default_values):
+        add_rrset = False
+        for parameter in parameters:
+            parameter_name = parameter.find("strong").text
+
+            if parameter_name == "rrsets":
+                add_rrset = True
+                continue
+
+            required = True
+            for item in params_default_values:
+                if item.find("span", {"class": "n"}).text == parameter_name \
+                        and item.find("span", {"class": "o"}):
+                    required = False
+
+            try:
+                description = parameter.find("p").text.split("–")[-1].strip().replace("\n", " ")
+            except AttributeError:
+                description = parameter_name
+
+            self.parameters.append(
+                Parameters(
+                    name=parameter_name,
+                    type_=parameter.find("em").text,
+                    description=description,
+                    required=required
+                )
+            )
+
+        if add_rrset:
+            self.parameters += rrset_params
+
+    def parse(self):
+        self.name = self.content.find("dt", {"class": "sig sig-object py"}).get("id").split(".")[-1]
+        self.description = self.content.find("dd").find("p").text
+        params_default_values = self.content.find_all("em", {"class": "sig-param"})
 
         try:
             # if only one param, it's not li but p
-            method_params = method.find("dl", {"class": "field-list simple"}).find_all("li") \
-                or method.find("dd", {"class": "field-odd"}).find_all("p")
+            parameters = self.content.find("dl", {"class": "field-list simple"}).find_all("li") \
+                or self.content.find("dd", {"class": "field-odd"}).find_all("p")
         except AttributeError:   # there is no args at all
-            method_params = []
-        parameters = {
-            "server_id": {
-                "type": "string",
-                "description": "Server name to query.",
-                "required": True,
-                "default": "localhost"
-            }
-        }
-        if klass_name == "powerdns.interface.PDNSZone":
-            parameters["zone_name"] = {
-                "type": "string",
-                "description": "Zone's canonical name to get details.",
-                "required": True,
-            }
-        for params in method_params:
-            param_name = params.find("strong").text
-            param_type = params.find("em").text
-            param_desc = params.find("p") or params
-            param_desc = params.text.split("–")[-1].strip()
-            param_required = True
-            for item in method_params_val:
-                if item.find("span", {"class": "n"}).text == param_name:
-                    if item.find("span", {"class": "o"}):
-                        param_required = False
+            parameters = []
 
-            parameters[param_name] = {
-                "type": param_type,
-                "description":  param_desc,
-                "required": param_required
-            }
-        yaml_content = f"""---
-  name: {method_name}
-  runner_type: "python-script"
-  description: "{method_doc}"
-  entry_point: "{method_name}.py"
-  parameters:
-    server_id:
-      type: string
-      description: "Server name to query."
-      required: true
-      default: localhost
-"""
-        if klass_name == "powerdns.interface.PDNSZone":
-            yaml_content += """    zone_name:
-      type: string
-      description: "Zone's canonical name to get details."
-      required: true
-"""
-        for name, param in parameters.items():
-            if name == "server_id" or name == "zone_name":
-                continue
-            if name == "rrsets" and param["required"]:  # create zone without rrset 
-                for elem_name, elem in rrset_params.items():
-                    yaml_content += f"""    {elem_name}:
-      type: {type_mapping.get(elem['type'], elem['type'])}
-      description: {elem['description'] or elem_name }
-      required: {elem['required']}
-"""
-            else:
-                yaml_content += f"""    {name}:
-      type: {type_mapping.get(param['type'], param['type'])}
-      description: {param['description'] or name}
-      required: {param['required']}
-"""
-        method_cls = to_camel_case(f"{method_name}")
-        python_content = f"""from lib.base import PowerDNSClient
+        self._parse_params(parameters, params_default_values)
 
 
-class {method_cls}(PowerDNSClient):
-  def _run(self, *args, **kwargs):
-    return self.{call}.{method_name}(*args, **kwargs)
-"""
-        with open(f"{method_name}.yaml", "w") as handle:
-            handle.write(yaml_content)
+class Property(Template):
+    args: str = ""
 
-        with open(f"{method_name}.py", "w") as handle:
-            handle.write(python_content)
-    
+    def parse(self):
+        self.name = self.content.find("span", {"class": "sig-name descname"}).text
+        self.description = self.content.find("dd").find("p").text
+        self.script_name = f"get_{self.name}"
+
+    def to_py(self):
+        return f"""from lib.base import PowerDNSClient
+
+class {self.class_name}(PowerDNSClient):
+    def _run(self):
+        return self.{self.call}.{self.name}
+"""
+
+if __name__ == "__main__":
+    with open("/home/lisa/work/python-powerdns/docs/build/html/interface.html") as handle:
+        html_documentation = handle.read()
+
+    parsed_documentation = bs4.BeautifulSoup(html_documentation, 'html.parser')
+    all_cls = parsed_documentation.find_all("dl", {"class": "py class"})
+
+    # We need to retrieive first all parameters for RRSets so we can later add it to each action
+    # that needs it
+    for cls in all_cls:
+        cls_name = cls.find("dt", {"class": "sig sig-object py"}).get("id")
+        if cls_name != "powerdns.interface.RRSet":
+            continue
+        parsed_cls = Class(cls, cls_name)
+        parsed_cls.parse()
+        rrset_params = parsed_cls.parameters
+
+    for cls in all_cls:
+        cls_name = cls.find("dt", {"class": "sig sig-object py"}).get("id")
+        if cls_name not in ALLOWED_CLASSES:
+            continue
+
+        cls_methods = cls.find_all("dl", {"class": "py method"}) or []
+        cls_properties = cls.find_all("dl", {"class": "py property"}) or []
+
+        for cls_property in cls_properties:
+            Property(cls_property, cls_name).write()
+
+        for cls_method in cls_methods:
+            Method(cls_method, cls_name, rrset_params).write()
