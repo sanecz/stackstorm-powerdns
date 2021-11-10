@@ -205,8 +205,6 @@ class Method(Template):
 
 
 class Property(Template):
-    args: str = ""
-
     def parse(self):
         self.name = self.content.find("span", {"class": "sig-name descname"}).text
         self.description = self.content.find("dd").find("p").text
