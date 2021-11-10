@@ -37,9 +37,6 @@ class Parameters:
         self.required = required
         self.default = default
 
-    def __repr__(self):
-        return f"<Parameters@{self.name}>"
-
     @property
     def parameters(self):
         content = {
