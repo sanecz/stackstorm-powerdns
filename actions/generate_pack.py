@@ -1,7 +1,7 @@
 from abc import ABC
 
 import bs4
-from ruamel.yaml import YAML, yaml_object
+from ruamel.yaml import YAML
 from collections import ChainMap
 
 from typing import Optional
