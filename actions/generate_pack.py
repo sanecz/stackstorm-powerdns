@@ -55,7 +55,7 @@ class Template:
 
     def __init__(self, content, parent_name):
         self.content = content
-        self.parameters = [self.add_server_id()]
+        self.parameters = [self.add_server_id(), self.add_timeout()]
 
         if parent_name == "powerdns.interface.PDNSZone":
             self.parameters.append(self.add_zone_name())
