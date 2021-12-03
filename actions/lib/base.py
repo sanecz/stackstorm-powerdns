@@ -31,6 +31,9 @@ class PowerDNSClient(Action):
         )
         self._api = powerdns.PDNSEndpoint(self.api_client)
 
+    def _run(self, *args, **kwargs):
+        raise NotImplementedError
+
     def _select_server_id(self, server_id):
         for server in self._api.servers:
             if str(server) == server_id:

@@ -1,7 +1,7 @@
 import bs4
+import sys
 from ruamel.yaml import YAML
 from collections import ChainMap
-
 from typing import Optional
 
 yaml = YAML()
@@ -104,7 +104,8 @@ class Template:
             "entry_point": f"{self.script_name or self.name}.py",
             "parameters": dict(ChainMap(*map(lambda x: x.parameters, self.parameters)))
         }
-        with open(f"{self.script_name or self.name}.py", "w") as fp:
+
+        with open(f"{self.script_name or self.name}.yaml", "w") as fp:
             yaml.dump(content, fp)
 
     def to_py(self):
@@ -227,7 +228,7 @@ class {self.class_name}(PowerDNSClient):
 """
 
 if __name__ == "__main__":
-    with open("/home/lisa/work/python-powerdns/docs/build/html/interface.html") as handle:
+    with open(sys.argv[1]) as handle:
         html_documentation = handle.read()
 
     parsed_documentation = bs4.BeautifulSoup(html_documentation, 'html.parser')
